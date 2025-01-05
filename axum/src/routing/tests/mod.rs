@@ -39,6 +39,7 @@ use tower_http::{
 };
 use tower_service::Service;
 
+mod aws_json_router;
 mod fallback;
 mod get_to_head;
 mod handle_error;

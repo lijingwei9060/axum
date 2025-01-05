@@ -26,6 +26,7 @@ use tower_service::Service;
 pub mod future;
 pub mod method_routing;
 
+mod aws_json_router;
 mod into_make_service;
 mod method_filter;
 mod not_found;
@@ -38,6 +39,7 @@ pub(crate) mod url_params;
 mod tests;
 
 pub use self::{into_make_service::IntoMakeService, method_filter::MethodFilter, route::Route};
+pub use self::aws_json_router::{AWSJsonRouter, AWSJsonRouterIntoService};
 
 pub use self::method_routing::{
     any, any_service, connect, connect_service, delete, delete_service, get, get_service, head,
