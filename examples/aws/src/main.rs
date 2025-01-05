@@ -5,17 +5,27 @@
 //! ```
 
 use axum::{
-    extract::Request,
+    extract::{FromRequest, Request},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::post,
-    AWSJsonRouter,
+    AWSJson, AWSJsonRejection, AWSJsonRouter,
 };
+
+use bytes::Bytes;
+use serde::{Deserialize, Serialize};
 
 #[tokio::main]
 async fn main() {
     let app = AWSJsonRouter::new()
-        .route("users", post(|_: Request| async { "users#create" }))
+        .route(
+            "users",
+            post(|AWSJson(user): AWSJson<User>| async move {
+                println!("{:?}", user);
+
+                "users#create"
+            }),
+        )
         .route("users.show", post(|_: Request| async { "users#show" }))
         .route("users.action", post(|_: Request| async { "users#action" }));
 
@@ -26,27 +36,25 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-// Make our own error that wraps `anyhow::Error`.
-struct AppError(anyhow::Error);
-
-// Tell axum how to convert `AppError` into a response.
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Something went wrong: {}", self.0),
-        )
-            .into_response()
-    }
+#[derive(Deserialize, Serialize, Debug, Clone)]
+struct User {
+    first: String,
+    last: String,
 }
 
-// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
-// `Result<_, AppError>`. That way you don't need to do that manually.
-impl<E> From<E> for AppError
+impl<S> FromRequest<S> for User
 where
-    E: Into<anyhow::Error>,
+    S: Send + Sync,
 {
-    fn from(err: E) -> Self {
-        Self(err.into())
+    type Rejection = AWSJsonRejection;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
+        match Bytes::from_request(req, state).await {
+            Ok(b) => match serde_json::from_slice(&b) {
+                Ok(user) => Ok(user),
+                Err(e) => Err(AWSJsonRejection::ValidationException(e.into())),
+            },
+            Err(_) => todo!(),
+        }
     }
 }

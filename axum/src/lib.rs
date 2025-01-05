@@ -463,6 +463,7 @@ pub use self::routing::Router;
 
 #[doc(inline)]
 pub use self::routing::AWSJsonRouter;
+pub use self::extract::*;
 
 #[doc(inline)]
 #[cfg(feature = "form")]

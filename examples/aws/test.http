@@ -2,6 +2,11 @@ POST http://127.0.0.1:3000 HTTP/1.1
 content-type: application/x-amz-json-1.1
 x-amz-target: users
 
+{
+  "first": "li",
+  "last": "jiingwei"
+}
+
 ###
 
 POST http://127.0.0.1:3000 HTTP/1.1
