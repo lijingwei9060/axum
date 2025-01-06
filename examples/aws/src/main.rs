@@ -6,10 +6,9 @@
 
 use axum::{
     extract::{FromRequest, Request},
-    http::StatusCode,
-    response::{IntoResponse, Response},
+    new_validation_exception,
     routing::post,
-    AWSJson, AWSJsonRejection, AWSJsonRouter,
+    AWSJson, AWSJsonRouter, AWSRejection,
 };
 
 use bytes::Bytes;
@@ -46,13 +45,13 @@ impl<S> FromRequest<S> for User
 where
     S: Send + Sync,
 {
-    type Rejection = AWSJsonRejection;
+    type Rejection = AWSRejection;
 
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         match Bytes::from_request(req, state).await {
             Ok(b) => match serde_json::from_slice(&b) {
                 Ok(user) => Ok(user),
-                Err(e) => Err(AWSJsonRejection::ValidationException(e.into())),
+                Err(e) => Err(new_validation_exception(Some(e.to_string()), None)),
             },
             Err(_) => todo!(),
         }

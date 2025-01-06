@@ -2,7 +2,7 @@
 
 use http::header::{self, HeaderMap};
 
-pub mod aws_json;
+mod aws_json;
 pub use aws_json::*;
 
 
